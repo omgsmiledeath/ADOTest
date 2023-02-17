@@ -5,8 +5,8 @@ class Program
 {
     static void Main(string[] args)
     {
-        //string conStr = @"Data Source = /Users/kseniabelaevskaa/Projects/Bases/AdoTest.db"; //mac
-        string conStr = @"Data Source =/tmp/TestDB.sqlite3"; //linux
+        string conStr = @"Data Source = /Users/kseniabelaevskaa/Projects/Bases/AdoTest.db"; //mac
+        //string conStr = @"Data Source =/tmp/TestDB.sqlite3"; //linux
         
         
         
@@ -23,14 +23,19 @@ class Program
            }
             var da = new SQLiteDataAdapter(@"SELECT * FROM Workers", con);
             var dt = new DataTable();
+            Prepare(da, dt, con);
             da.Fill(dt);
-            PrintTable(dt);
+            
             System.Console.WriteLine("/n");
-            Prepare(da,dt,con);
+            
             //Пробуем модифицировать Row
-            //InsertInTable(dt,"o1","p","g");
-            //DeleteInTable(dt,1);
-            UpdateRefill(dt,da);
+            InsertInTable(dt,"o1","p","g",da);
+            PrintTable(dt);
+            DeleteInTable(dt,da,16);
+            
+            PrintTable(dt);
+
+            UpdateInTable(dt, da, 10, "kek", "lol", "666666");
             PrintTable(dt);
         }
         catch (Exception e)
@@ -42,6 +47,9 @@ class Program
             Console.WriteLine("DOne");
         }
     }
+
+
+    #region PrintTable
     public static void PrintTable(DataTable dt)
     {
         foreach (DataColumn column in dt.Columns)
@@ -57,6 +65,8 @@ class Program
             Console.WriteLine();
         }
     }
+    #endregion
+    #region Prepare
     public static void Prepare (SQLiteDataAdapter da,DataTable dt,SQLiteConnection con)
     {
         //SELECT
@@ -85,30 +95,69 @@ class Program
         da.DeleteCommand = new SQLiteCommand(sql,con);
         da.DeleteCommand.Parameters.Add("@oid",DbType.Int32,4,"oid");
     }
-    public static void InsertInTable(DataTable dt,string firstName,string lastName,string phoneNumber)
+    #endregion
+    #region InsertInTable
+    public static void InsertInTable(DataTable dt,string firstName,string lastName,string phoneNumber,SQLiteDataAdapter da)
     {
         DataRow row = dt.NewRow();
+        
+        row["oid"] = LastOidInTable(dt)+1;
         row["firstName"] = firstName;
         row["lastName"] = lastName;
         row["phoneNumber"]= phoneNumber;
         dt.Rows.Add(row);
+        UpdateRefill(dt, da);
     }
-    public static void DeleteInTable(DataTable dt,int oid)
+    #endregion
+    #region DeleteInTable 
+    public static void DeleteInTable(DataTable dt,SQLiteDataAdapter da,int oid)
     {
         foreach(DataRow dr in dt.Rows)
         {
             if (Int32.Parse(dr["oid"].ToString())==oid){
                 dr.Delete();
+                UpdateRefill(dt, da);
+                
+            }
+        }
+        
+    }
+    #endregion
+    #region UpdateInTable
+    public static void UpdateInTable(DataTable dt,SQLiteDataAdapter da,int oid,string firstName,string lastName,string phoneNumber)
+    {
+        foreach (DataRow dr in dt.Rows)
+        {
+            if (Int32.Parse(dr["oid"].ToString()) == oid)
+            {
+                dr["firstName"] = firstName;
+                dr["lastname"] = lastName;
+                dr["phoneNumber"] = phoneNumber;
+                UpdateRefill(dt, da);
+
             }
         }
     }
+    #endregion
+    #region LastOidInTable
+    public static int LastOidInTable(DataTable dt)
+    {
+        int res = 0;
+        foreach (DataRow dr in dt.Rows)
+        {
+            res = Int32.Parse(dr["oid"].ToString());
+        }
+        return res;
+
+    }
+    #endregion
+    #region UpdateRefill
     public static void UpdateRefill(DataTable dt,SQLiteDataAdapter da)
     {
         da.Update(dt);
-        dt.Dispose();
-        dt = new DataTable();
-        da.Fill(dt);
+        
 
     }
+    #endregion
 }
 
