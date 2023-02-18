@@ -16,17 +16,15 @@ class Program
             con.Open();
             
 
-           using (SQLiteCommand sqlcom = new SQLiteCommand(con))
-           {
-               sqlcom.CommandText = @"INSERT INTO Workers (firstName,lastName,phoneNumber) VALUES ('раз','dva','8800553535')";
-               //sqlcom.ExecuteNonQuery();
-           }
-            var da = new SQLiteDataAdapter(@"SELECT * FROM Workers", con);
+           
+            var da = new SQLiteDataAdapter();
+            
             var dt = new DataTable();
+            Prepare(da,dt,con);
             da.Fill(dt);
             PrintTable(dt);
-            System.Console.WriteLine("/n");
-            Prepare(da,dt,con);
+        
+            
             //Пробуем модифицировать Row
             //InsertInTable(dt,"o1","p","g");
             //DeleteInTable(dt,1);
